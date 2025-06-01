@@ -7,7 +7,6 @@ import {
 } from "../types/index";
 import { DatabaseService } from "../services/databaseService";
 import { LogAction } from "@prisma/client";
-import { get } from "http";
 
 export class DockerManager {
   private docker: Docker;
@@ -44,8 +43,8 @@ export class DockerManager {
 
       await container.start();
 
-      // Simple wait for container to be fully ready
-      await new Promise((resolve) => setTimeout(resolve, 8000)); // Wait 8 seconds
+      // Wait for container to be fully ready
+      await new Promise((resolve) => setTimeout(resolve, 8000));
 
       const containerInfo = await container.inspect();
       const vncPort =
@@ -83,22 +82,13 @@ export class DockerManager {
       return {
         containerId,
         vncPort,
-        // Use auto-connect URL instead of default vnc.html
-        vncUrl: this.getDirectConnectUrl(vncPort, true),
+        // Use the built-in lite version that auto-connects
+        vncUrl: `http://localhost:${vncPort}/vnc_lite.html`,
       };
     } catch (error) {
       console.error("Error creating container:", error);
       throw error;
     }
-  }
-
-  //Create a direct connection URL with parameters
-  getDirectConnectUrl(vncPort: string, autoConnect = true): string {
-    if (autoConnect) {
-      // Use URL parameters to auto-connect
-      return `http://localhost:${vncPort}/vnc.html?autoconnect=true&reconnect=true&reconnect_delay=2000`;
-    }
-    return `http://localhost:${vncPort}/vnc.html`;
   }
 
   async stopContainer(containerId: string): Promise<boolean> {

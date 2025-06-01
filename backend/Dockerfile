@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Chromium manually
+# Install Chrome
 RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
     && apt-get update \
@@ -32,14 +32,10 @@ RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add
 RUN git clone https://github.com/novnc/noVNC.git /opt/novnc
 RUN git clone https://github.com/novnc/websockify /opt/novnc/utils/websockify
 
-# Modify noVNC to auto-connect by default
-RUN sed -i 's/WebUtil.getConfigVar("autoconnect", false)/true/g' /opt/novnc/app/ui.js || true
-RUN sed -i 's/"autoconnect": false/"autoconnect": true/g' /opt/novnc/vnc.html || true
-
 # Create openbox configuration directory
 RUN mkdir -p /root/.config/openbox
 
-# Create openbox configuration to disable window decorations and controls
+# Create openbox configuration to disable window decorations
 RUN echo '<?xml version="1.0" encoding="UTF-8"?>' > /root/.config/openbox/rc.xml && \
     echo '<openbox_config xmlns="http://openbox.org/3.4/rc">' >> /root/.config/openbox/rc.xml && \
     echo '  <theme>' >> /root/.config/openbox/rc.xml && \
@@ -49,23 +45,9 @@ RUN echo '<?xml version="1.0" encoding="UTF-8"?>' > /root/.config/openbox/rc.xml
     echo '  <desktops>' >> /root/.config/openbox/rc.xml && \
     echo '    <number>1</number>' >> /root/.config/openbox/rc.xml && \
     echo '  </desktops>' >> /root/.config/openbox/rc.xml && \
-    echo '  <keyboard>' >> /root/.config/openbox/rc.xml && \
-    echo '    <!-- Disable Alt+F4 -->' >> /root/.config/openbox/rc.xml && \
-    echo '    <keybind key="A-F4"><action name="Execute"><command>true</command></action></keybind>' >> /root/.config/openbox/rc.xml && \
-    echo '    <!-- Disable Ctrl+Alt+T -->' >> /root/.config/openbox/rc.xml && \
-    echo '    <keybind key="C-A-t"><action name="Execute"><command>true</command></action></keybind>' >> /root/.config/openbox/rc.xml && \
-    echo '  </keyboard>' >> /root/.config/openbox/rc.xml && \
-    echo '  <applications>' >> /root/.config/openbox/rc.xml && \
-    echo '    <application class="Google-chrome">' >> /root/.config/openbox/rc.xml && \
-    echo '      <decor>no</decor>' >> /root/.config/openbox/rc.xml && \
-    echo '      <maximized>true</maximized>' >> /root/.config/openbox/rc.xml && \
-    echo '      <skip_pager>yes</skip_pager>' >> /root/.config/openbox/rc.xml && \
-    echo '      <skip_taskbar>yes</skip_taskbar>' >> /root/.config/openbox/rc.xml && \
-    echo '    </application>' >> /root/.config/openbox/rc.xml && \
-    echo '  </applications>' >> /root/.config/openbox/rc.xml && \
     echo '</openbox_config>' >> /root/.config/openbox/rc.xml
 
-# Create a startup script
+# Create startup script
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 

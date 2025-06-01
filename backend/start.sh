@@ -7,7 +7,7 @@ export DISPLAY=:1
 # Wait for X server to initialize
 sleep 3
 
-# Start lightweight window manager (OpenBox instead of XFCE)
+# Start lightweight window manager
 openbox &
 
 # Wait for window manager to start
@@ -16,13 +16,13 @@ sleep 2
 # Hide mouse cursor when inactive
 unclutter -idle 3 -root &
 
-# Start VNC server with better caching options
+# Start VNC server
 x11vnc -display :1 -nopw -forever -shared -ncache_cr &
 
 # Wait for VNC to start
 sleep 2
 
-# Start noVNC server on port 6080 using websockify directly
+# Start noVNC server on port 6080
 websockify --web=/opt/novnc 6080 localhost:5900 &
 
 # Wait for noVNC to be ready
