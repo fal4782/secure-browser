@@ -39,7 +39,7 @@ export function CreateSessionForm() {
       <div className="relative">
         <label
           htmlFor="url"
-          className="block text-sm font-semibold text-gray-200 mb-2 sm:mb-3 flex items-center gap-2"
+          className="text-sm font-semibold text-gray-200 mb-2 sm:mb-3 flex items-center gap-2"
         >
           <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" />
           Website URL
