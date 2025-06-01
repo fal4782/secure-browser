@@ -19,19 +19,25 @@ cd secure-browser/backend
 npm install
 ```
 
-2. Set up your database URL in `backend/.env`:
+2. Build the Docker image for browser containers:
+
+```bash
+docker build -t vnc-browser-chrome:latest .
+```
+
+3. Set up your database URL in `backend/.env`:
 
 ```env
 DATABASE_URL="postgresql://username:password@localhost:5432/your_db_name"
 ```
 
-3. Run database migrations:
+4. Run database migrations:
 
 ```bash
 npx prisma migrate dev --name init
 ```
 
-4. Start the server:
+5. Start the server:
 
 ```bash
 npm run dev
