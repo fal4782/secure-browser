@@ -7,6 +7,7 @@ import {
 } from "../types/index";
 import { DatabaseService } from "../services/databaseService";
 import { LogAction } from "@prisma/client";
+import { get } from "http";
 
 export class DockerManager {
   private docker: Docker;
@@ -20,10 +21,7 @@ export class DockerManager {
     this.cleanupOrphanedContainers();
   }
 
-  async createContainer(
-    url: string,
-    userId?: string
-  ): Promise<CreateContainerResponse> {
+  async createContainer(url: string): Promise<CreateContainerResponse> {
     const containerId = uuidv4();
 
     try {
@@ -46,29 +44,10 @@ export class DockerManager {
 
       await container.start();
 
-      // RETRY LOGIC for port inspection
-      let containerInfo;
-      let retries = 5;
-      while (retries > 0) {
-        try {
-          containerInfo = await container.inspect();
-          const portBindings = containerInfo.NetworkSettings.Ports["6080/tcp"];
-          if (portBindings && portBindings[0]) {
-            break;
-          }
-        } catch (error) {
-          console.log(
-            `Waiting for container to be ready... ${retries} retries left`
-          );
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          retries--;
-        }
-      }
+      // Simple wait for container to be fully ready
+      await new Promise((resolve) => setTimeout(resolve, 8000)); // Wait 8 seconds
 
-      if (retries === 0) {
-        throw new Error("Container failed to start properly");
-      }
-
+      const containerInfo = await container.inspect();
       const vncPort =
         containerInfo?.NetworkSettings.Ports["6080/tcp"][0].HostPort;
 
@@ -104,12 +83,22 @@ export class DockerManager {
       return {
         containerId,
         vncPort,
-        vncUrl: `http://localhost:${vncPort}/vnc.html`,
+        // Use auto-connect URL instead of default vnc.html
+        vncUrl: this.getDirectConnectUrl(vncPort, true),
       };
     } catch (error) {
       console.error("Error creating container:", error);
       throw error;
     }
+  }
+
+  //Create a direct connection URL with parameters
+  getDirectConnectUrl(vncPort: string, autoConnect = true): string {
+    if (autoConnect) {
+      // Use URL parameters to auto-connect
+      return `http://localhost:${vncPort}/vnc.html?autoconnect=true&reconnect=true&reconnect_delay=2000`;
+    }
+    return `http://localhost:${vncPort}/vnc.html`;
   }
 
   async stopContainer(containerId: string): Promise<boolean> {
@@ -182,7 +171,6 @@ export class DockerManager {
           "--user-data-dir=/tmp/chrome-data-new",
           url,
         ],
-
         Env: ["DISPLAY=:1"],
         AttachStdout: true,
         AttachStderr: true,

@@ -24,7 +24,7 @@ class DockerManager {
         this.db = new databaseService_1.DatabaseService();
         this.cleanupOrphanedContainers();
     }
-    createContainer(url, userId) {
+    createContainer(url) {
         return __awaiter(this, void 0, void 0, function* () {
             const containerId = (0, uuid_1.v4)();
             try {
@@ -45,26 +45,9 @@ class DockerManager {
                     StopTimeout: 10,
                 });
                 yield container.start();
-                // RETRY LOGIC for port inspection
-                let containerInfo;
-                let retries = 5;
-                while (retries > 0) {
-                    try {
-                        containerInfo = yield container.inspect();
-                        const portBindings = containerInfo.NetworkSettings.Ports["6080/tcp"];
-                        if (portBindings && portBindings[0]) {
-                            break;
-                        }
-                    }
-                    catch (error) {
-                        console.log(`Waiting for container to be ready... ${retries} retries left`);
-                        yield new Promise((resolve) => setTimeout(resolve, 1000));
-                        retries--;
-                    }
-                }
-                if (retries === 0) {
-                    throw new Error("Container failed to start properly");
-                }
+                // Simple wait for container to be fully ready
+                yield new Promise((resolve) => setTimeout(resolve, 8000)); // Wait 8 seconds
+                const containerInfo = yield container.inspect();
                 const vncPort = containerInfo === null || containerInfo === void 0 ? void 0 : containerInfo.NetworkSettings.Ports["6080/tcp"][0].HostPort;
                 if (!vncPort) {
                     throw new Error("Failed to get VNC port");
@@ -86,7 +69,8 @@ class DockerManager {
                 return {
                     containerId,
                     vncPort,
-                    vncUrl: `http://localhost:${vncPort}/vnc.html`,
+                    // Use auto-connect URL instead of default vnc.html
+                    vncUrl: this.getDirectConnectUrl(vncPort, true),
                 };
             }
             catch (error) {
@@ -94,6 +78,14 @@ class DockerManager {
                 throw error;
             }
         });
+    }
+    //Create a direct connection URL with parameters
+    getDirectConnectUrl(vncPort, autoConnect = true) {
+        if (autoConnect) {
+            // Use URL parameters to auto-connect
+            return `http://localhost:${vncPort}/vnc.html?autoconnect=true&reconnect=true&reconnect_delay=2000`;
+        }
+        return `http://localhost:${vncPort}/vnc.html`;
     }
     stopContainer(containerId) {
         return __awaiter(this, void 0, void 0, function* () {
