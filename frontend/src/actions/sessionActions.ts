@@ -53,7 +53,13 @@ export async function stopSession(containerId: string) {
   try {
     const response = await fetch(`${API_BASE}/api/containers/${containerId}`, {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
     const data = await response.json();
 

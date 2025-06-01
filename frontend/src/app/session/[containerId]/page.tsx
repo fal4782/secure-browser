@@ -1,9 +1,18 @@
 import Link from "next/link";
+import {
+  ArrowLeft,
+  Shield,
+  Monitor,
+  Container,
+  Wifi,
+  AlertCircle,
+  Home,
+} from "lucide-react";
 
 interface SessionPageProps {
-  params: {
+  params: Promise<{
     containerId: string;
-  };
+  }>;
 }
 
 async function getSessionInfo(containerId: string) {
@@ -26,24 +35,33 @@ async function getSessionInfo(containerId: string) {
 }
 
 export default async function SessionPage({ params }: SessionPageProps) {
-  const session = await getSessionInfo(params.containerId);  
-
+  const { containerId } = await params;
+  const session = await getSessionInfo(containerId);
   if (!session) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-6">❌</div>
-          <h1 className="text-3xl font-bold text-white mb-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+        <div className="text-center max-w-md mx-auto">
+          <div className="relative mb-8">
+            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-red-500/20 to-rose-600/20 rounded-full flex items-center justify-center border border-red-500/30">
+              <AlertCircle className="w-12 h-12 text-red-400" />
+            </div>
+            <div className="absolute inset-0 w-24 h-24 mx-auto rounded-full bg-red-500/10 animate-ping"></div>
+          </div>
+
+          <h1 className="text-3xl font-bold text-white mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text">
             Session Not Found
           </h1>
-          <p className="text-gray-400 mb-6">
-            The session you are looking for does not exist or has expired.
+          <p className="text-gray-400 mb-8 leading-relaxed">
+            The session you are looking for does not exist or has expired. This
+            could happen if the session was terminated or timed out.
           </p>
+
           <Link
             href="/"
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+            className="group inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25"
           >
-            ← Back to Home
+            <Home className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1" />
+            Back to Home
           </Link>
         </div>
       </div>
@@ -51,49 +69,117 @@ export default async function SessionPage({ params }: SessionPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 shadow-lg">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Animated Header */}
+      <div className="relative bg-gray-800/80 backdrop-blur-sm border-b border-gray-700/50 shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-indigo-500/5"></div>
+        <div className="relative max-w-7xl mx-auto px-6 py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-6">
+              <div className="relative">
+                <div className="w-5 h-5 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50"></div>
+                <div className="absolute inset-0 w-5 h-5 bg-green-500 rounded-full animate-ping opacity-30"></div>
+              </div>
+
               <div>
-                <h1 className="text-xl font-semibold text-white">
-                  Secure Browser Session
-                </h1>
-                <p className="text-sm text-gray-400">{session.url}</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <Shield className="w-6 h-6 text-blue-400" />
+                  <h1 className="text-2xl font-bold text-white">
+                    Secure Browser Session
+                  </h1>
+                </div>
+                <div className="flex items-center gap-2 text-gray-300">
+                  <Wifi className="w-4 h-4 text-green-400" />
+                  <p
+                    className="font-medium truncate cursor-help max-w-[300px] sm:max-w-[400px] lg:max-w-[700px]"
+                    title={session.url}
+                  >
+                    {session.url}
+                  </p>
+                </div>
               </div>
             </div>
+
             <Link
               href="/"
-              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+              className="group flex items-center gap-2 text-gray-400 hover:text-white transition-all duration-300 bg-gray-700/50 hover:bg-gray-600/50 px-4 py-2 rounded-lg border border-gray-600/50 hover:border-gray-500/50"
             >
-              ← Back to Home
+              <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" />
+              Back to Home
             </Link>
           </div>
         </div>
       </div>
 
-      {/* VNC Container */}
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden">
-          <div className="bg-gray-750 px-6 py-4 border-b border-gray-600">
-            <div className="flex items-center justify-between">
-              <h2 className="font-medium text-white">Remote Desktop</h2>
-              <div className="flex items-center gap-4 text-sm text-gray-400">
-                <span>Container: {session.containerId.slice(0, 12)}...</span>
-                <span>Port: {session.vncPort}</span>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden hover:border-gray-600/50 transition-all duration-500">
+          {/* VNC Header */}
+          <div className="bg-gradient-to-r from-gray-800/80 to-gray-700/80 px-6 py-4 border-b border-gray-600/50">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Monitor className="w-5 h-5 text-purple-400" />
+                <h2 className="font-semibold text-white text-lg">
+                  Remote Desktop
+                </h2>
+              </div>
+
+              <div className="flex items-center gap-6 text-sm">
+                <div className="flex items-center gap-2 text-gray-300 bg-gray-700/50 px-3 py-1.5 rounded-lg">
+                  <Container className="w-4 h-4 text-blue-400" />
+                  <span className="font-mono">
+                    {session.containerId.slice(0, 12)}...
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 text-gray-300 bg-gray-700/50 px-3 py-1.5 rounded-lg">
+                  <Monitor className="w-4 h-4 text-green-400" />
+                  <span>Port: {session.vncPort}</span>
+                </div>
+
+                <div className="flex items-center gap-2 text-gray-300 bg-gray-700/50 px-3 py-1.5 rounded-lg">
+                  <span>1280×720</span>
+                </div>
               </div>
             </div>
           </div>
 
+          {/* VNC Viewer */}
           <div className="aspect-video bg-black">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 pointer-events-none"></div>
             <iframe
               src={session.vncUrl}
-              className="w-full h-full border-0"
+              className="w-full h-full border-0 relative z-10"
               title="VNC Session"
             />
+
+            {/* Loading overlay - you can customize this based on your needs */}
+            <div className="absolute top-4 right-4 bg-gray-800/90 backdrop-blur-sm px-3 py-2 rounded-lg border border-gray-600/50">
+              <div className="flex items-center gap-2 text-sm text-gray-300">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                Connected
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions Panel */}
+        <div className="mt-6 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-xl p-4">
+          <div className="flex items-center justify-center gap-4 text-sm text-gray-400">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-blue-400" />
+              Isolated Environment
+            </div>
+            <div className="w-px h-4 bg-gray-600"></div>
+            <div className="flex items-center gap-2">
+              <Wifi className="w-4 h-4 text-green-400" />
+              Secure Connection
+            </div>
+            <div className="w-px h-4 bg-gray-600"></div>
+            <div className="flex items-center gap-2">
+              <Monitor className="w-4 h-4 text-purple-400" />
+              Remote Desktop
+            </div>
           </div>
         </div>
       </div>
