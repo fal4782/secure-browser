@@ -1,0 +1,85 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id        String   @id @default(uuid())
+    email     String   @unique
+    name      String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    sessions ContainerSession[]
+    @@map("users")
+}
+
+model ContainerSession {
+    id          String        @id @default(uuid())
+    containerId String        @unique
+    userId      String?
+    targetUrl   String
+    vncPort     String
+    status      SessionStatus @default(ACTIVE)
+    createdAt   DateTime      @default(now())
+    endedAt     DateTime?
+    duration    Int? // in seconds
+    user User?          @relation(fields: [userId], references: [id])
+    logs ContainerLog[]
+
+    @@map("container_sessions")
+}
+
+model ContainerLog {
+    id        String    @id @default(uuid())
+    sessionId String
+    action    LogAction
+    details   String?
+    timestamp DateTime  @default(now())
+    session ContainerSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+    @@map("container_logs")
+}
+
+model SecurityEvent {
+    id          String            @id @default(uuid())
+    url         String
+    eventType   SecurityEventType
+    severity    EventSeverity     @default(LOW)
+    description String?
+    ipAddress   String?
+    userAgent   String?
+    timestamp   DateTime          @default(now())
+    @@map("security_events")
+}
+
+enum SessionStatus {
+    ACTIVE
+    ENDED
+    FAILED
+}
+
+enum LogAction {
+    CONTAINER_CREATED
+    CONTAINER_STARTED
+    URL_OPENED
+    CONTAINER_STOPPED
+    CONTAINER_TIMEOUT
+    ERROR_OCCURRED
+}
+
+enum SecurityEventType {
+    MALICIOUS_URL
+    SUSPICIOUS_ACTIVITY
+    RATE_LIMIT_EXCEEDED
+    INVALID_REQUEST
+}
+
+enum EventSeverity {
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+}

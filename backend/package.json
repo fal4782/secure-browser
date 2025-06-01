@@ -1,0 +1,38 @@
+{
+  "name": "secure-browser-backend",
+  "version": "1.0.0",
+  "description": "Backend for secure containerized browser app",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node dist/index.js",
+    "dev": "npm run build && npm run start",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.8.2",
+    "cors": "^2.8.5",
+    "dockerode": "^4.0.6",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.18",
+    "@types/dockerode": "^3.3.39",
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.29",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.18.1",
+    "nodemon": "^3.1.10",
+    "prisma": "^6.8.2",
+    "typescript": "^5.8.3"
+  }
+}

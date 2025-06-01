@@ -1,0 +1,229 @@
+import Docker from "dockerode";
+import { v4 as uuidv4 } from "uuid";
+import {
+  ContainerInfo,
+  CreateContainerResponse,
+  ContainerSummary,
+} from "../types/index";
+import { DatabaseService } from "../services/databaseService";
+import { LogAction } from "@prisma/client";
+
+export class DockerManager {
+  private docker: Docker;
+  private activeContainers: Map<string, ContainerInfo>;
+  private db: DatabaseService;
+
+  constructor() {
+    this.docker = new Docker();
+    this.activeContainers = new Map();
+    this.db = new DatabaseService();
+    this.cleanupOrphanedContainers();
+  }
+
+  async createContainer(
+    url: string,
+    userId?: string
+  ): Promise<CreateContainerResponse> {
+    const containerId = uuidv4();
+
+    try {
+      const container = await this.docker.createContainer({
+        Image: "vnc-browser-chrome:latest",
+        name: `vnc-browser-${containerId}`,
+        HostConfig: {
+          Memory: 512 * 1024 * 1024, // 512MB
+          CpuShares: 512, // Half CPU
+          NetworkMode: "bridge",
+          PortBindings: {
+            "6080/tcp": [{ HostPort: "0" }], // Random port for noVNC
+            "5900/tcp": [{ HostPort: "0" }], // Random port for VNC
+          },
+          AutoRemove: true,
+        },
+        Env: [`TARGET_URL=${url}`],
+        StopTimeout: 10,
+      });
+
+      await container.start();
+
+      // RETRY LOGIC for port inspection
+      let containerInfo;
+      let retries = 5;
+      while (retries > 0) {
+        try {
+          containerInfo = await container.inspect();
+          const portBindings = containerInfo.NetworkSettings.Ports["6080/tcp"];
+          if (portBindings && portBindings[0]) {
+            break;
+          }
+        } catch (error) {
+          console.log(
+            `Waiting for container to be ready... ${retries} retries left`
+          );
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          retries--;
+        }
+      }
+
+      if (retries === 0) {
+        throw new Error("Container failed to start properly");
+      }
+
+      const vncPort =
+        containerInfo.NetworkSettings.Ports["6080/tcp"][0].HostPort;
+
+      // Create database session
+      const session = await this.db.createSession(
+        containerId,
+        url,
+        vncPort,
+        userId
+      );
+      await this.db.logAction(
+        session.id,
+        LogAction.CONTAINER_CREATED,
+        `Container created for URL: ${url}`
+      );
+      await this.db.logAction(
+        session.id,
+        LogAction.CONTAINER_STARTED,
+        `VNC available on port ${vncPort}`
+      );
+
+      const timeoutId = setTimeout(() => {
+        this.stopContainer(containerId);
+      }, 10 * 60 * 1000); // 10 minutes
+
+      this.activeContainers.set(containerId, {
+        container,
+        vncPort,
+        url,
+        createdAt: new Date(),
+        timeoutId,
+      });
+
+      return {
+        containerId,
+        vncPort,
+        vncUrl: `http://localhost:${vncPort}/vnc.html`,
+      };
+    } catch (error) {
+      console.error("Error creating container:", error);
+      throw error;
+    }
+  }
+
+  async stopContainer(containerId: string): Promise<boolean> {
+    const containerInfo = this.activeContainers.get(containerId);
+    if (!containerInfo) {
+      return false;
+    }
+
+    try {
+      clearTimeout(containerInfo.timeoutId);
+      await containerInfo.container.stop();
+
+      // Update database
+      const session = await this.db.getSession(containerId);
+      if (session) {
+        await this.db.endSession(containerId);
+        await this.db.logAction(
+          session.id,
+          LogAction.CONTAINER_STOPPED,
+          "Container stopped by user or timeout"
+        );
+      }
+
+      this.activeContainers.delete(containerId);
+      return true;
+    } catch (error) {
+      console.error("Error stopping container:", error);
+      return false;
+    }
+  }
+
+  getContainerInfo(containerId: string): ContainerInfo | undefined {
+    return this.activeContainers.get(containerId);
+  }
+
+  listActiveContainers(): ContainerSummary[] {
+    return Array.from(this.activeContainers.entries()).map(([id, info]) => ({
+      containerId: id,
+      url: info.url,
+      vncPort: info.vncPort,
+      createdAt: info.createdAt,
+    }));
+  }
+
+  async openUrlInContainer(containerId: string, url: string): Promise<boolean> {
+    const containerInfo = this.activeContainers.get(containerId);
+    if (!containerInfo) {
+      throw new Error("Container not found");
+    }
+
+    try {
+      const exec = await containerInfo.container.exec({
+        Cmd: [
+          "google-chrome",
+          "--no-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+          "--disable-software-rasterizer",
+          "--disable-background-timer-throttling",
+          "--disable-backgrounding-occluded-windows",
+          "--disable-renderer-backgrounding",
+          "--no-first-run",
+          "--disable-default-apps",
+          "--disable-extensions",
+          "--disable-plugins",
+          "--disable-translate",
+          "--disable-background-networking",
+          "--disable-sync",
+          "--disable-web-security",
+          "--user-data-dir=/tmp/chrome-data-new",
+          url,
+        ],
+
+        Env: ["DISPLAY=:1"],
+        AttachStdout: true,
+        AttachStderr: true,
+      });
+
+      await exec.start({ Detach: false, Tty: true });
+
+      // Log URL access
+      const session = await this.db.getSession(containerId);
+      if (session) {
+        await this.db.logAction(
+          session.id,
+          LogAction.URL_OPENED,
+          `Opened URL: ${url}`
+        );
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error opening URL in container:", error);
+      throw error;
+    }
+  }
+
+  private async cleanupOrphanedContainers() {
+    try {
+      const containers = await this.docker.listContainers({
+        all: true,
+        filters: {
+          name: ["vnc-browser-"], // Match your naming pattern
+        },
+      });
+
+      for (const container of containers) {
+        const containerObj = this.docker.getContainer(container.Id);
+        await containerObj.remove({ force: true });
+        console.log(`Cleaned up orphaned container: ${container.Names[0]}`);
+      }
+    } catch (error) {
+      console.error("Container cleanup failed:", error);
+    }
+  }
+}
