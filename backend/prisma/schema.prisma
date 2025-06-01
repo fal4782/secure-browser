@@ -7,39 +7,28 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model User {
-    id        String   @id @default(uuid())
-    email     String   @unique
-    name      String?
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    sessions ContainerSession[]
-    @@map("users")
-}
-
 model ContainerSession {
-    id          String        @id @default(uuid())
-    containerId String        @unique
-    userId      String?
+    id          String         @id @default(uuid())
+    containerId String         @unique
     targetUrl   String
     vncPort     String
-    status      SessionStatus @default(ACTIVE)
-    createdAt   DateTime      @default(now())
+    status      SessionStatus  @default(ACTIVE)
+    createdAt   DateTime       @default(now())
     endedAt     DateTime?
     duration    Int? // in seconds
-    user User?          @relation(fields: [userId], references: [id])
-    logs ContainerLog[]
+    logs        ContainerLog[]
 
     @@map("container_sessions")
 }
 
 model ContainerLog {
-    id        String    @id @default(uuid())
+    id        String           @id @default(uuid())
     sessionId String
     action    LogAction
     details   String?
-    timestamp DateTime  @default(now())
-    session ContainerSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+    timestamp DateTime         @default(now())
+    session   ContainerSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
     @@map("container_logs")
 }
 
@@ -52,6 +41,7 @@ model SecurityEvent {
     ipAddress   String?
     userAgent   String?
     timestamp   DateTime          @default(now())
+
     @@map("security_events")
 }
 

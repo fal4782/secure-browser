@@ -13,39 +13,13 @@ export class DatabaseService {
     this.prisma = new PrismaClient();
   }
 
-  // User operations
-  async createUser(email: string, name?: string) {
-    return await this.prisma.user.create({
-      data: { email, name },
-    });
-  }
-
-  async getUserByEmail(email: string) {
-    return await this.prisma.user.findUnique({
-      where: { email },
-    });
-  }
-
-  async getUserById(id: string) {
-    return await this.prisma.user.findUnique({
-      where: { id },
-      include: { sessions: true },
-    });
-  }
-
   // Container session operations
-  async createSession(
-    containerId: string,
-    targetUrl: string,
-    vncPort: string,
-    userId?: string
-  ) {
+  async createSession(containerId: string, targetUrl: string, vncPort: string) {
     return await this.prisma.containerSession.create({
       data: {
         containerId,
         targetUrl,
         vncPort,
-        userId,
       },
     });
   }
@@ -53,7 +27,7 @@ export class DatabaseService {
   async getSession(containerId: string) {
     return await this.prisma.containerSession.findUnique({
       where: { containerId },
-      include: { user: true, logs: true },
+      include: { logs: true },
     });
   }
 
@@ -82,16 +56,6 @@ export class DatabaseService {
   async getActiveSessions() {
     return await this.prisma.containerSession.findMany({
       where: { status: SessionStatus.ACTIVE },
-      include: { user: true },
-    });
-  }
-
-  async getUserSessions(userId: string, limit: number = 10) {
-    return await this.prisma.containerSession.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      take: limit,
-      include: { logs: true },
     });
   }
 
@@ -154,13 +118,11 @@ export class DatabaseService {
     const activeSessions = await this.prisma.containerSession.count({
       where: { status: SessionStatus.ACTIVE },
     });
-    const totalUsers = await this.prisma.user.count();
     const securityEvents = await this.prisma.securityEvent.count();
 
     return {
       totalSessions,
       activeSessions,
-      totalUsers,
       securityEvents,
     };
   }

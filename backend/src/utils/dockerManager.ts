@@ -73,12 +73,7 @@ export class DockerManager {
         containerInfo.NetworkSettings.Ports["6080/tcp"][0].HostPort;
 
       // Create database session
-      const session = await this.db.createSession(
-        containerId,
-        url,
-        vncPort,
-        userId
-      );
+      const session = await this.db.createSession(containerId, url, vncPort);
       await this.db.logAction(
         session.id,
         LogAction.CONTAINER_CREATED,
