@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/controllers/containerController.ts","./src/routes/container.ts","./src/services/databaseService.ts","./src/types/index.ts","./src/utils/dockerManager.ts"],"version":"5.8.3"}

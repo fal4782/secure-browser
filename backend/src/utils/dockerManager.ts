@@ -70,7 +70,11 @@ export class DockerManager {
       }
 
       const vncPort =
-        containerInfo.NetworkSettings.Ports["6080/tcp"][0].HostPort;
+        containerInfo?.NetworkSettings.Ports["6080/tcp"][0].HostPort;
+
+      if (!vncPort) {
+        throw new Error("Failed to get VNC port");
+      }
 
       // Create database session
       const session = await this.db.createSession(containerId, url, vncPort);
