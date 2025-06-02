@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Start virtual display
-Xvfb :1 -screen 0 1920x1080x24 &
+Xvfb :1 -screen 0 1280x720x24 &
 export DISPLAY=:1
 
 # Wait for X server to initialize
@@ -17,7 +17,7 @@ sleep 2
 unclutter -idle 3 -root &
 
 # Start VNC server
-x11vnc -display :1 -nopw -forever -shared -ncache_cr &
+x11vnc -display :1 -nopw -forever -shared -ncache_cr -scale 1280x720 &
 
 # Wait for VNC to start
 sleep 2
@@ -79,7 +79,7 @@ monitor_display() {
     while true; do
         if ! pgrep -f "Xvfb :1" > /dev/null; then
             echo "Xvfb crashed, restarting..."
-            Xvfb :1 -screen 0 1920x1080x24 &
+            Xvfb :1 -screen 0 1280x720x24 &
         fi
         sleep 10
     done
