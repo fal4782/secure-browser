@@ -12,10 +12,6 @@ export function StopSessionButton({ containerId }: StopSessionButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleStop = async () => {
-    if (!confirm("Are you sure you want to stop this session?")) {
-      return;
-    }
-
     setIsLoading(true);
     try {
       const result = await stopSession(containerId);

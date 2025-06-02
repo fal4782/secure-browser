@@ -147,12 +147,19 @@ export default async function SessionPage({ params }: SessionPageProps) {
           </div>
 
           {/* VNC Viewer */}
-          <div className="relative aspect-video bg-black">
+          <div
+            className="relative w-full bg-black"
+            style={{ aspectRatio: "16/9" }}
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 pointer-events-none"></div>
             <iframe
-              src={session.vncUrl}
-              className="w-full h-full border-0 relative z-10"
+              src={`${session.vncUrl}?autoconnect=true&resize=scale&quality=6&compression=6`}
+              className="absolute inset-0 w-full h-full border-0"
               title="VNC Session"
+              style={{
+                minHeight: "400px",
+                maxHeight: "80vh",
+              }}
             />
 
             {/* Connection Status */}
