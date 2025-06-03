@@ -147,27 +147,28 @@ export default async function SessionPage({ params }: SessionPageProps) {
           </div>
 
           {/* VNC Viewer */}
-          <div
-            className="relative w-full bg-black"
-            style={{ aspectRatio: "16/9" }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 pointer-events-none"></div>
-            <iframe
-              src={`${session.vncUrl}?autoconnect=true&resize=scale&quality=6&compression=6`}
-              className="absolute inset-0 w-full h-full border-0"
-              title="VNC Session"
-              style={{
-                minHeight: "400px",
-                maxHeight: "80vh",
-              }}
-            />
+          <div className="relative w-full bg-black overflow-hidden">
+            <div
+              className="w-full"
+              style={{ paddingBottom: "56.25%" /* 16:9 aspect ratio */ }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 pointer-events-none"></div>
+              <iframe
+                src={`${session.vncUrl}?autoconnect=true&resize=scale&quality=6&compression=6`}
+                className="absolute top-0 left-0 w-full h-full border-0"
+                title="VNC Session"
+                style={{
+                  minHeight: "300px",
+                }}
+              />
 
-            {/* Connection Status */}
-            <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-gray-800/90 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-2 rounded-md sm:rounded-lg border border-gray-600/50">
-              <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-300">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="hidden sm:inline">Connected</span>
-                <span className="sm:hidden">●</span>
+              {/* Connection Status */}
+              <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-gray-800/90 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-2 rounded-md sm:rounded-lg border border-gray-600/50 z-10">
+                <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-300">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="hidden sm:inline">Connected</span>
+                  <span className="sm:hidden">●</span>
+                </div>
               </div>
             </div>
           </div>
