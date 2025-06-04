@@ -19,35 +19,63 @@ cd secure-browser/backend
 npm install
 ```
 
-2. Build the Docker image for browser containers:
+2. Install backend dependencies:
 
 ```bash
+cd backend
+npm install
+```
+
+3. Install frontend dependencies:
+
+```bash
+cd ../frontend
+npm install
+```
+
+4. Build the Docker image for browser containers:
+
+```bash
+cd ../backend
 docker build -t vnc-browser-chrome:latest .
 ```
 
-3. Set up your database URL in `backend/.env`:
+5. Set up your database URL in `backend/.env`:
 
 ```env
 DATABASE_URL="postgresql://username:password@localhost:5432/your_db_name"
 ```
 
-4. Run database migrations:
+6. Run database migrations:
 
 ```bash
 npx prisma migrate dev --name init
 ```
 
-5. Start the server:
+7. Start the backend server:
 
 ```bash
 npm run dev
 ```
 
-Server runs on `http://localhost:3001`
+8. Start the frontend (in a new terminal):
+
+```bash
+cd ../frontend
+npm run dev
+```
+
+## Access Points
+
+- **Frontend Interface**: `http://localhost:3000` - Main web interface for managing browser sessions
+- **Backend API**: `http://localhost:3001` - REST API server
+- **VNC Sessions**: Dynamic ports assigned per container for secure browsing
 
 ## Tech Stack
 
-- Backend: Node.js + Express + TypeScript
-- Database: PostgreSQL + Prisma
-- Containers: Docker
-- Security: Rate limiting, CORS, Helmet
+- **Frontend**: React + TypeScript + Tailwind CSS + Vite
+- **Backend**: Node.js + Express + TypeScript
+- **Database**: PostgreSQL + Prisma
+- **Containers**: Docker
+- **Security**: Rate limiting, CORS, Helmet
+- **Remote Access**: VNC + noVNC web client
