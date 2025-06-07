@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { DockerManager } from "../utils/dockerManager";
-import { CreateContainerRequest, OpenUrlRequest, ApiResponse } from "../types";
+import { CreateContainerRequest, ApiResponse } from "../types";
 
 export class ContainerController {
   private dockerManager: DockerManager;
@@ -114,41 +114,6 @@ export class ContainerController {
       res
         .status(500)
         .json({ success: false, error: "Failed to list containers" });
-    }
-  }
-
-  async openUrl(
-    req: Request<{ containerId: string }, ApiResponse, OpenUrlRequest>,
-    res: Response<ApiResponse>
-  ): Promise<void> {
-    try {
-      const { containerId } = req.params;
-      const { url } = req.body;
-      const userAgent = req.get("User-Agent") || "";
-      
-      if (!url) {
-        res.status(400).json({ success: false, error: "URL is required" });
-        return;
-      }
-
-      try {
-        new URL(url);
-      } catch (error) {
-        res.status(400).json({ success: false, error: "Invalid URL format" });
-        return;
-      }
-
-      await this.dockerManager.openUrlInContainer(containerId, url, userAgent);
-
-      res.json({
-        success: true,
-        message: "URL opened in container",
-      });
-    } catch (error) {
-      console.error("Error opening URL:", error);
-      res
-        .status(500)
-        .json({ success: false, error: "Failed to open URL in container" });
     }
   }
 }

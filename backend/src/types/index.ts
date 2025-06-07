@@ -32,6 +32,3 @@ export interface CreateContainerRequest {
   url: string;
 }
 
-export interface OpenUrlRequest {
-  url: string;
-}

@@ -24,9 +24,5 @@ router.get("/", (req, res) => {
   containerController.listActiveContainers(req, res);
 });
 
-// Open URL in existing container
-router.post("/:containerId/open", (req, res) => {
-  containerController.openUrl(req, res);
-});
 
 export default router;
