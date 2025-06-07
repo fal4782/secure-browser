@@ -36,8 +36,7 @@ async function getSessionInfo(containerId: string) {
 
     const data = await response.json();
     return data.success ? data.data : null;
-  } catch (error) {
-    console.error("Error fetching session:", error);
+  } catch {
     return null;
   }
 }
