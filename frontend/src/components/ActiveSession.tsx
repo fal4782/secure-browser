@@ -12,9 +12,6 @@ export async function ActiveSessions() {
           <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center">
             <Monitor className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400" />
           </div>
-          <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-            <Wifi className="w-3 h-3 sm:w-4 sm:h-4 text-white animate-pulse" />
-          </div>
         </div>
         <h3 className="text-lg sm:text-xl font-semibold text-gray-300 mb-2">
           No Active Sessions
