@@ -3,10 +3,10 @@ import {
   ArrowLeft,
   Shield,
   Monitor,
-  Container,
   Wifi,
   AlertCircle,
   Home,
+  Smartphone,
 } from "lucide-react";
 import { headers } from "next/headers";
 
@@ -86,24 +86,38 @@ export default async function SessionPage({ params }: SessionPageProps) {
       <div className="relative bg-gray-800/80 backdrop-blur-sm border-b border-gray-700/50 shadow-2xl">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-indigo-500/5"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3 sm:gap-6 min-w-0">
-              <div className="relative flex-shrink-0">
-                <div className="w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50"></div>
-                <div className="absolute inset-0 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full animate-ping opacity-30"></div>
-              </div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+              <Link
+                href="/"
+                className="group flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 text-gray-400 hover:text-white transition-all duration-300 bg-gray-700/50 hover:bg-gray-600/50 rounded-lg border border-gray-600/50 hover:border-gray-500/50 flex-shrink-0"
+              >
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 group-hover:-translate-x-1" />
+              </Link>
 
+              {/* Title and URL */}
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 flex-shrink-0" />
-                  <h1 className="text-lg sm:text-2xl font-bold text-white truncate">
-                    Secure Browser Session
+                <div className="flex items-center gap-2 sm:gap-3 mb-1">
+                  <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
+                  <h1 className="text-sm sm:text-xl font-bold text-white truncate">
+                    Secure Browser
                   </h1>
+                  {/* Mobile/Desktop indicator */}
+                  <div className="flex items-center gap-1 bg-gray-700/50 px-2 py-1 rounded-md">
+                    {isMobile ? (
+                      <Smartphone className="w-3 h-3 text-green-400" />
+                    ) : (
+                      <Monitor className="w-3 h-3 text-blue-400" />
+                    )}
+                    <span className="text-xs text-gray-300">
+                      {isMobile ? "Mobile" : "Desktop"}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-gray-300 min-w-0">
                   <Wifi className="w-3 h-3 sm:w-4 sm:h-4 text-green-400 flex-shrink-0" />
                   <p
-                    className="font-medium truncate text-sm sm:text-base cursor-help"
+                    className="font-medium truncate text-xs sm:text-sm cursor-help"
                     title={session.url}
                   >
                     {session.url}
@@ -111,15 +125,6 @@ export default async function SessionPage({ params }: SessionPageProps) {
                 </div>
               </div>
             </div>
-
-            <Link
-              href="/"
-              className="group flex items-center gap-2 text-gray-400 hover:text-white transition-all duration-300 bg-gray-700/50 hover:bg-gray-600/50 px-3 py-2 sm:px-4 sm:py-2 rounded-lg border border-gray-600/50 hover:border-gray-500/50 text-sm sm:text-base flex-shrink-0"
-            >
-              <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 group-hover:-translate-x-1" />
-              <span className="hidden sm:inline">Back to Home</span>
-              <span className="sm:hidden">Back</span>
-            </Link>
           </div>
         </div>
       </div>
@@ -129,7 +134,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
         <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden hover:border-gray-600/50 transition-all duration-500">
           {/* VNC Header */}
           <div className="bg-gradient-to-r from-gray-800/80 to-gray-700/80 px-3 py-3 sm:px-6 sm:py-4 border-b border-gray-600/50">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3">
                 <Monitor className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                 <h2 className="font-semibold text-white text-base sm:text-lg">
@@ -137,23 +142,16 @@ export default async function SessionPage({ params }: SessionPageProps) {
                 </h2>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 sm:gap-6 text-xs sm:text-sm">
-                <div className="flex items-center gap-1 sm:gap-2 text-gray-300 bg-gray-700/50 px-2 py-1 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg">
-                  <Container className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" />
-                  <span className="font-mono text-xs">
-                    {session.containerId.slice(0, 8)}...
-                  </span>
+              {/* Connection status and port in one row */}
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-1 text-gray-300 bg-gray-700/50 px-2 py-1 rounded-md">
+                  <Monitor className="w-3 h-3 text-green-400" />
+                  <span className="text-xs sm:text-sm">{session.vncPort}</span>
                 </div>
 
-                <div className="flex items-center gap-1 sm:gap-2 text-gray-300 bg-gray-700/50 px-2 py-1 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg">
-                  <Monitor className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
-                  <span>Port: {session.vncPort}</span>
-                </div>
-
-                <div className="flex items-center gap-1 sm:gap-2 text-gray-300 bg-gray-700/50 px-2 py-1 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg">
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="hidden sm:inline">Connected</span>
-                  <span className="sm:hidden">●</span>
+                <div className="flex items-center gap-1 text-gray-300 bg-gray-700/50 px-2 py-1 rounded-md">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs sm:text-sm">Live</span>
                 </div>
               </div>
             </div>

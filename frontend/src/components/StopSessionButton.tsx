@@ -43,14 +43,12 @@ export function StopSessionButton({ containerId }: StopSessionButtonProps) {
         {isLoading ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="hidden sm:inline">Stopping...</span>
-            <span className="sm:hidden">...</span>
+            <span>Stopping...</span>
           </>
         ) : (
           <>
             <X className="w-4 h-4" />
-            <span className="hidden sm:inline">Stop Session</span>
-            <span className="sm:hidden">Stop</span>
+            <span>Stop Session</span>
           </>
         )}
       </div>
