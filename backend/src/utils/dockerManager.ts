@@ -20,8 +20,29 @@ export class DockerManager {
     this.cleanupOrphanedContainers();
   }
 
-  async createContainer(url: string): Promise<CreateContainerResponse> {
+  private isMobileUserAgent(userAgent: string): boolean {
+    if (!userAgent) return false;
+
+    const mobileRegex =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i;
+    return mobileRegex.test(userAgent);
+  }
+
+  private getChromeUserAgent(isMobile: boolean): string {
+    if (isMobile) {
+      return "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36";
+    } else {
+      return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Safari/537.36";
+    }
+  }
+
+  async createContainer(
+    url: string,
+    userAgent?: string
+  ): Promise<CreateContainerResponse> {
     const containerId = uuidv4();
+    const isMobile = this.isMobileUserAgent(userAgent || "");
+    const chromeUserAgent = this.getChromeUserAgent(isMobile);
 
     try {
       const container = await this.docker.createContainer({
@@ -37,7 +58,13 @@ export class DockerManager {
           },
           AutoRemove: true,
         },
-        Env: [`TARGET_URL=${url}`],
+        Env: [
+          `TARGET_URL=${url}`,
+          `USER_AGENT=${chromeUserAgent}`,
+          `IS_MOBILE=${isMobile ? "true" : "false"}`,
+          `VIEWPORT_WIDTH=${isMobile ? "375" : "1280"}`,
+          `VIEWPORT_HEIGHT=${isMobile ? "667" : "720"}`,
+        ],
         StopTimeout: 10,
       });
 
@@ -59,7 +86,9 @@ export class DockerManager {
       await this.db.logAction(
         session.id,
         LogAction.CONTAINER_CREATED,
-        `Container created for URL: ${url}`
+        `Container created for URL: ${url} (${
+          isMobile ? "Mobile" : "Desktop"
+        } mode)`
       );
       await this.db.logAction(
         session.id,
@@ -79,11 +108,13 @@ export class DockerManager {
         timeoutId,
       });
 
+      const hostIP = process.env.HOST_IP || "localhost";
+      const vncUrl = `http://${hostIP}:${vncPort}/vnc_lite.html`; // Lite version that auto-connects
+
       return {
         containerId,
         vncPort,
-        // Use the built-in lite version that auto-connects
-        vncUrl: `http://localhost:${vncPort}/vnc_lite.html`,
+        vncUrl,
       };
     } catch (error) {
       console.error("Error creating container:", error);
@@ -133,13 +164,20 @@ export class DockerManager {
     }));
   }
 
-  async openUrlInContainer(containerId: string, url: string): Promise<boolean> {
+  async openUrlInContainer(
+    containerId: string,
+    url: string,
+    userAgent?: string
+  ): Promise<boolean> {
     const containerInfo = this.activeContainers.get(containerId);
     if (!containerInfo) {
       throw new Error("Container not found");
     }
 
     try {
+      const isMobile = this.isMobileUserAgent(userAgent || "");
+      const chromeUserAgent = this.getChromeUserAgent(isMobile);
+
       const exec = await containerInfo.container.exec({
         Cmd: [
           "google-chrome",
@@ -159,6 +197,14 @@ export class DockerManager {
           "--disable-sync",
           "--disable-web-security",
           "--user-data-dir=/tmp/chrome-data-new",
+          `--user-agent=${chromeUserAgent}`,
+          ...(isMobile
+            ? [
+                "--window-size=375,667",
+                "--device-scale-factor=1",
+                "--force-device-scale-factor=1",
+              ]
+            : ["--window-size=1280,720"]),
           url,
         ],
         Env: ["DISPLAY=:1"],
@@ -174,7 +220,7 @@ export class DockerManager {
         await this.db.logAction(
           session.id,
           LogAction.URL_OPENED,
-          `Opened URL: ${url}`
+          `Opened URL: ${url} (${isMobile ? "Mobile" : "Desktop"} mode)`
         );
       }
 
@@ -190,7 +236,7 @@ export class DockerManager {
       const containers = await this.docker.listContainers({
         all: true,
         filters: {
-          name: ["vnc-browser-"], // Match your naming pattern
+          name: ["vnc-browser-"],
         },
       });
 

@@ -15,7 +15,7 @@ export class ContainerController {
   ): Promise<void> {
     try {
       const { url } = req.body;
-
+      const userAgent = req.get("User-Agent") || "";
       if (!url) {
         res.status(400).json({ success: false, error: "URL is required" });
         return;
@@ -28,7 +28,10 @@ export class ContainerController {
         return;
       }
 
-      const containerInfo = await this.dockerManager.createContainer(url);
+      const containerInfo = await this.dockerManager.createContainer(
+        url,
+        userAgent
+      );
 
       res.json({
         success: true,
@@ -74,13 +77,14 @@ export class ContainerController {
       const containerInfo = this.dockerManager.getContainerInfo(containerId);
 
       if (containerInfo) {
+        const hostIP = process.env.HOST_IP || "localhost";
         res.json({
           success: true,
           data: {
             containerId,
             url: containerInfo.url,
             vncPort: containerInfo.vncPort,
-            vncUrl: `http://localhost:${containerInfo.vncPort}/vnc.html`,
+            vncUrl: `http://${hostIP}:${containerInfo.vncPort}/vnc.html`,
             createdAt: containerInfo.createdAt,
           },
         });
@@ -120,7 +124,8 @@ export class ContainerController {
     try {
       const { containerId } = req.params;
       const { url } = req.body;
-
+      const userAgent = req.get("User-Agent") || "";
+      
       if (!url) {
         res.status(400).json({ success: false, error: "URL is required" });
         return;
@@ -133,7 +138,7 @@ export class ContainerController {
         return;
       }
 
-      await this.dockerManager.openUrlInContainer(containerId, url);
+      await this.dockerManager.openUrlInContainer(containerId, url, userAgent);
 
       res.json({
         success: true,

@@ -13,10 +13,14 @@ export async function createSession(formData: FormData) {
   }
 
   try {
+    const { headers } = await import("next/headers");
+    const headersList = await headers();
+    const userAgent = headersList.get("user-agent") || "";
     const response = await fetch(`${API_BASE}/api/containers/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "User-Agent": userAgent,
       },
       body: JSON.stringify({ url }),
     });

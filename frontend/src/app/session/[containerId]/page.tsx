@@ -8,11 +8,19 @@ import {
   AlertCircle,
   Home,
 } from "lucide-react";
+import { headers } from "next/headers";
 
 interface SessionPageProps {
   params: Promise<{
     containerId: string;
   }>;
+}
+
+function isMobileUserAgent(userAgent: string): boolean {
+  if (!userAgent) return false;
+  const mobileRegex =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i;
+  return mobileRegex.test(userAgent);
 }
 
 async function getSessionInfo(containerId: string) {
@@ -37,6 +45,9 @@ async function getSessionInfo(containerId: string) {
 export default async function SessionPage({ params }: SessionPageProps) {
   const { containerId } = await params;
   const session = await getSessionInfo(containerId);
+  const headersList = await headers();
+  const userAgent = headersList.get("user-agent") || "";
+  const isMobile = isMobileUserAgent(userAgent);
 
   if (!session) {
     return (
@@ -122,7 +133,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
               <div className="flex items-center gap-2 sm:gap-3">
                 <Monitor className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                 <h2 className="font-semibold text-white text-base sm:text-lg">
-                  Remote Desktop
+                  Remote Browser
                 </h2>
               </div>
 
@@ -139,8 +150,10 @@ export default async function SessionPage({ params }: SessionPageProps) {
                   <span>Port: {session.vncPort}</span>
                 </div>
 
-                <div className="hidden sm:flex items-center gap-2 text-gray-300 bg-gray-700/50 px-3 py-1.5 rounded-lg">
-                  <span>1280×720</span>
+                <div className="flex items-center gap-1 sm:gap-2 text-gray-300 bg-gray-700/50 px-2 py-1 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="hidden sm:inline">Connected</span>
+                  <span className="sm:hidden">●</span>
                 </div>
               </div>
             </div>
@@ -150,49 +163,20 @@ export default async function SessionPage({ params }: SessionPageProps) {
           <div className="relative w-full bg-black overflow-hidden">
             <div
               className="w-full"
-              style={{ paddingBottom: "56.25%" /* 16:9 aspect ratio */ }}
+              style={{
+                paddingBottom: isMobile ? "177.87%" : "56.25%",
+              }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 pointer-events-none"></div>
+
               <iframe
                 src={`${session.vncUrl}?autoconnect=true&resize=scale&quality=6&compression=6`}
                 className="absolute top-0 left-0 w-full h-full border-0"
                 title="VNC Session"
                 style={{
-                  minHeight: "300px",
+                  minHeight: isMobile ? "200px" : "300px",
                 }}
               />
-
-              {/* Connection Status */}
-              <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-gray-800/90 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-2 rounded-md sm:rounded-lg border border-gray-600/50 z-10">
-                <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-300">
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="hidden sm:inline">Connected</span>
-                  <span className="sm:hidden">●</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions Panel */}
-        <div className="mt-3 sm:mt-6 bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-lg sm:rounded-xl p-3 sm:p-4">
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-400">
-            <div className="flex items-center gap-1 sm:gap-2">
-              <Shield className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" />
-              <span className="hidden sm:inline">Isolated Environment</span>
-              <span className="sm:hidden">Isolated</span>
-            </div>
-            <div className="w-px h-3 sm:h-4 bg-gray-600"></div>
-            <div className="flex items-center gap-1 sm:gap-2">
-              <Wifi className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
-              <span className="hidden sm:inline">Secure Connection</span>
-              <span className="sm:hidden">Secure</span>
-            </div>
-            <div className="w-px h-3 sm:h-4 bg-gray-600"></div>
-            <div className="flex items-center gap-1 sm:gap-2">
-              <Monitor className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400" />
-              <span className="hidden sm:inline">Remote Desktop</span>
-              <span className="sm:hidden">Remote</span>
             </div>
           </div>
         </div>
