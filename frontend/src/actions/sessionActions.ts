@@ -2,12 +2,12 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export async function createSession(formData: FormData) {
   const url = formData.get("url") as string;
-
   if (!url) {
     throw new Error("URL is required");
   }
@@ -16,16 +16,19 @@ export async function createSession(formData: FormData) {
     const { headers } = await import("next/headers");
     const headersList = await headers();
     const userAgent = headersList.get("user-agent") || "";
-    const response = await fetch(`${API_BASE}/api/containers/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": userAgent,
-      },
-      body: JSON.stringify({ url }),
-    });
 
-    const data = await response.json();
+    const response = await axios.post(
+      `${API_BASE}/api/containers/create`,
+      { url },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": userAgent,
+        },
+      }
+    );
+
+    const data = response.data;
 
     if (data.success) {
       revalidatePath("/");
@@ -41,12 +44,13 @@ export async function createSession(formData: FormData) {
 
 export async function getActiveSessions() {
   try {
-    const response = await fetch(`${API_BASE}/api/containers`, {
-      cache: "no-store",
+    const response = await axios.get(`${API_BASE}/api/containers`, {
+      headers: {
+        "Cache-Control": "no-cache",
+      },
     });
 
-    const data = await response.json();
-    return data.success ? data.data : [];
+    return response.data.success ? response.data.data : [];
   } catch (error) {
     console.error("Error fetching sessions:", error);
     return [];
@@ -55,23 +59,19 @@ export async function getActiveSessions() {
 
 export async function stopSession(containerId: string) {
   try {
-    const response = await fetch(`${API_BASE}/api/containers/${containerId}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    const response = await axios.delete(
+      `${API_BASE}/api/containers/${containerId}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    const data = await response.json();
-
-    if (data.success) {
+    if (response.data.success) {
       revalidatePath("/");
     }
-
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Error stopping session:", error);
     throw error;

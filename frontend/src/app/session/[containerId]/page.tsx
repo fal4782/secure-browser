@@ -9,6 +9,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { headers } from "next/headers";
+import axios from "axios";
 
 interface SessionPageProps {
   params: Promise<{
@@ -27,15 +28,16 @@ async function getSessionInfo(containerId: string) {
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
   try {
-    const response = await fetch(`${API_BASE}/api/containers/${containerId}`, {
-      cache: "no-store",
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch session: ${response.statusText}`);
-    }
+    const response = await axios.get(
+      `${API_BASE}/api/containers/${containerId}`,
+      {
+        headers: {
+          "Cache-Control": "no-cache",
+        },
+      }
+    );
 
-    const data = await response.json();
-    return data.success ? data.data : null;
+    return response.data.success ? response.data.data : null;
   } catch {
     return null;
   }
