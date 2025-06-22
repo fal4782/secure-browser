@@ -56,7 +56,7 @@ export class DockerManager {
             "6080/tcp": [{ HostPort: "0" }], // Random port for noVNC
             "5900/tcp": [{ HostPort: "0" }], // Random port for VNC
           },
-          AutoRemove: true,
+          AutoRemove: true, // automatically remove the container when it stops
         },
         Env: [
           `TARGET_URL=${url}`,
@@ -65,7 +65,7 @@ export class DockerManager {
           `VIEWPORT_WIDTH=${isMobile ? "375" : "1280"}`,
           `VIEWPORT_HEIGHT=${isMobile ? "667" : "720"}`,
         ],
-        StopTimeout: 10,
+        StopTimeout: 10, // wait 10 seconds before force killing the container
       });
 
       await container.start();
@@ -73,9 +73,37 @@ export class DockerManager {
       // Wait for container to be fully ready
       await new Promise((resolve) => setTimeout(resolve, 8000));
 
+      //   const maxRetries = 20;
+      //   const retryInterval = 500; // 500ms
+      //   let isReady = false;
+
+      //   for (let i = 0; i < maxRetries; i++) {
+      //     try {
+      //       const containerInfo = await container.inspect();
+      //       const vncPort =
+      //         containerInfo?.NetworkSettings.Ports["6080/tcp"]?.[0]?.HostPort;
+
+      //       if (vncPort) {
+      //         // Check if the health endpoint is reachable
+      //         const response = await fetch(`http://localhost:${vncPort}/health`);
+      //         if (response.ok) {
+      //           isReady = true;
+      //           break;
+      //         }
+      //       }
+      //     } catch (error) {
+      //       // Ignore errors and retry
+      //     }
+      //     await new Promise((resolve) => setTimeout(resolve, retryInterval));
+      //   }
+
+      //   if (!isReady) {
+      //     throw new Error("Container did not become ready in time");
+      //   }
+
       const containerInfo = await container.inspect();
       const vncPort =
-        containerInfo?.NetworkSettings.Ports["6080/tcp"][0].HostPort;
+        containerInfo?.NetworkSettings.Ports["6080/tcp"][0].HostPort; //port mapped to 6080
 
       if (!vncPort) {
         throw new Error("Failed to get VNC port");
@@ -123,13 +151,18 @@ export class DockerManager {
   }
 
   async stopContainer(containerId: string): Promise<boolean> {
-    const containerInfo = this.activeContainers.get(containerId);
+    const containerInfo = this.activeContainers.get(containerId); // get active container info
     if (!containerInfo) {
       return false;
     }
 
     try {
+      /* clear the auto-stop timeout
+       * if the container is being stopped manually (or by another event)
+       * to prevent a double-stop or unexpected behavior.
+       */
       clearTimeout(containerInfo.timeoutId);
+
       await containerInfo.container.stop();
 
       // Update database

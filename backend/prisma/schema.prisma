@@ -32,19 +32,6 @@ model ContainerLog {
     @@map("container_logs")
 }
 
-model SecurityEvent {
-    id          String            @id @default(uuid())
-    url         String
-    eventType   SecurityEventType
-    severity    EventSeverity     @default(LOW)
-    description String?
-    ipAddress   String?
-    userAgent   String?
-    timestamp   DateTime          @default(now())
-
-    @@map("security_events")
-}
-
 enum SessionStatus {
     ACTIVE
     ENDED
@@ -58,18 +45,4 @@ enum LogAction {
     CONTAINER_STOPPED
     CONTAINER_TIMEOUT
     ERROR_OCCURRED
-}
-
-enum SecurityEventType {
-    MALICIOUS_URL
-    SUSPICIOUS_ACTIVITY
-    RATE_LIMIT_EXCEEDED
-    INVALID_REQUEST
-}
-
-enum EventSeverity {
-    LOW
-    MEDIUM
-    HIGH
-    CRITICAL
 }

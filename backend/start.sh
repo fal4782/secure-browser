@@ -15,7 +15,7 @@ echo "Viewport: ${VIEWPORT_WIDTH}x${VIEWPORT_HEIGHT}"
 
 # Set up display with appropriate resolution
 if [ "$IS_MOBILE" = "true" ]; then
-    # Mobile resolution (adjust as needed)
+    # Mobile resolution
     DISPLAY_RESOLUTION="375x667x24"
     SCALE_RESOLUTION="375x667"
 else
@@ -52,7 +52,7 @@ websockify --web=/opt/novnc 6080 localhost:5900 &
 # Wait for noVNC to be ready
 sleep 3
 
-# Create a function to restart Chrome if it crashes
+# Restart Chrome if it crashes
 restart_chrome() {
     while true; do
         # Base Chrome arguments
