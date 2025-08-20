@@ -15,8 +15,7 @@ A secure containerized browser solution that provides isolated web browsing sess
 
 ```bash
 git clone https://github.com/fal4782/secure-browser.git
-cd secure-browser/backend
-npm install
+cd secure-browser
 ```
 
 2. Install backend dependencies:
